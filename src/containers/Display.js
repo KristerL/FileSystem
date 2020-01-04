@@ -4,10 +4,10 @@ import styled from "styled-components";
 const RowContainer = styled.div`
     display:flex;
     align-items: center;
+    margin-bottom:5px;
     h1{
         margin:0;
         margin-right:10px;
-        width:60px;
         font-size:18px;
     }
 `;
@@ -33,174 +33,97 @@ const TextContainer = styled.div`
     font-size:18px;
 `;
 
-let colors = {
-    "A": "green",
-    B: "red",
-    C: "orange",
-    D: "blue",
-    E: "yellow",
-    F: "purple",
-    G: "lightgreen",
-    H: "brown",
-    I: "cyan",
-    J: "pink",
-    R: "orangered",
-    O: "orangered",
-};
-const alpha = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
 
-
-const Display = ({process, algorithm}) => {
-    const [visualize, setVisualize] = useState();
+const Display = ({process}) => {
+    const [visualize, setVisualize] = useState([]);
+    const [fragmentPercentage, setFragmentPercentage] = useState();
+    const [fragmentCoveragePercentage, setFragmentCoveragePercentage] = useState();
 
     useEffect(() => {
         let memory = [];
 
-        let pos = 0;
-        let method = "Last-fit";
         process.split(";").forEach(el => {
             const subel = el.split(",");
             memory.push({
-                time: subel[1],
-                weight: subel[0],
-                position: "",
-                tag: alpha[pos],
+                name: subel[0],
+                weight: subel[1],
             });
-            pos++;
         });
-        console.log(algorithm, "Last-fit", "Last-Fit" === algorithm)
-        switch (algorithm) {
-            case "Last-fit":
-                method = lastFit;
-                break;
-            case "Best-fit":
-                method = bestFit;
-                break;
-            case "Worst-fit":
-                method = worstFit;
-                break;
-            case "First-fit":
-                method = firstFit;
-                break;
-            case "Random-fit":
-                method = randomFit;
-                break;
+
+        builder(memory);
+    }, [process]);
+
+    useEffect(() =>{
+        if(visualize.length !== 0){
+            test();
         }
+    }, [visualize]);
 
-        runner(memory, method);
-    }, [process, algorithm]);
+    const test = () => {
+        if(visualize[0]) {
+            const lastResult = visualize[visualize.length -1];
+            let fragmentKeys = [];
 
-
-    const firstFit = (hoidja, lisada) => {
-        const options = getBlocks(hoidja, lisada.weight);
-        return options.length !== 0 ? options.slice()[0].start : null;
-    };
-
-    const lastFit = (hoidja, lisada) => {
-        const options = getBlocks(hoidja, lisada.weight);
-        return options.slice().length > 0 ? options.shift().start : null;
-    };
-
-    const bestFit = (hoidja, lisada) => {
-        const options = getBlocks(hoidja, lisada.weight);
-        if (options.length === 0) return null;
-        const smallest = options.reduce((prev, curr) => prev.length < curr.length ? prev : curr);
-        return smallest.start;
-    };
-
-    const worstFit = (hoidja, lisada) => {
-        const options = getBlocks(hoidja, lisada.weight);
-        if (options.length === 0) return null;
-        const smallest = options.reduce((prev, curr) => prev.length > curr.length ? curr : prev);
-        return smallest.start;
-    };
-
-    const randomFit = (hoidja, lisada) => {
-        const options = getBlocks(hoidja, lisada.weight);
-        if (options.length === 0) return null;
-        const rand = options[Math.floor(Math.random() * options.length)].start;
-        return rand;
-    };
-
-    const runner = (järjend, method) => {
-        let hoidja = new Array(50).fill('-');
-        let running = [];
-        let rows = [];
-
-        for (let i = 0; i < 10; i++) {
-            if (järjend.length > 0) {
-                const lisada = järjend.shift();
-                let koht = method(hoidja.slice(), lisada);
-                if (koht == null) {
-                    colors.E = "orangered";
-                    rows.push(["-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "E", "R", "R", "O", "R", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-"]);
-                    break;
+            let passed = [lastResult[0]];
+            let currentBlock = lastResult[0];
+            lastResult.forEach(el => {
+                if (currentBlock !== el) {
+                    currentBlock = el;
+                    if(passed.includes(currentBlock) && currentBlock !== " "){
+                        fragmentKeys.push(currentBlock);
+                    }
                 }
-                for (let j = 0; j < lisada.weight; j++) {
-                    hoidja[koht + j] = lisada.tag;
+                if(currentBlock !== " "){
+                    passed.push(currentBlock);
                 }
-                running.push({...lisada, koht: koht});
-                rows.push(hoidja.slice());
-                running = decreaseTimes(running.slice());
-                hoidja = validate(hoidja.slice(), running.slice());
-            }
+            });
+
+            const area = lastResult.reduce((area, current) => area + +fragmentKeys.includes(current) , 0);
+            setFragmentPercentage(Math.round(fragmentKeys.length / [...new Set(passed)].length * 10000) /100);
+            setFragmentCoveragePercentage(Math.round((area) / (passed.length -1) * 10000) /100);
         }
-        setVisualize(rows);
     };
 
-    const decreaseTimes = (running) => {
-        let runningCopy = running.slice(0);
-        runningCopy.forEach(a => {
-            a.time--;
-        });
-        return runningCopy;
-        return runningCopy;
-    };
-
-    //currently no cleanup in running
-    const validate = (hoidja, running) => {
-        running.forEach(el => {
-            if (el.time === 0) {
-                hoidja = hoidja.map(item => item === el.tag ? "-" : item)
-            }
-        });
-        return hoidja
-    };
-
-    const getBlocks = (hoidja, pikkus) => {
-        let matches = [];
-        let runningLength = 0;
-        let running = false;
-        let start = 0;
-        for (let i = 0; i < hoidja.length; i++) {
-            if (runningLength === parseInt(pikkus)) {
-                matches.push({start: start, length: runningLength})
-            }
-            if (hoidja[i] === "-") {
-                if (running === false) {
-                    runningLength = 1;
-                    running = true;
-                    start = i;
-                } else {
-                    runningLength++;
-                }
+    const builder = async (steps) => {
+        let blocks = [];
+        let startingRow = [" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "];
+        blocks.push(startingRow);
+        steps.forEach(row => {
+            if (row.weight === "-") {
+                startingRow = startingRow.map(el => el === row.name ? " " : el);
             } else {
-                running = false;
-                runningLength = 0;
+                let counter = row.weight;
+                startingRow = startingRow.map(el => {
+                    if (counter === 0) return el;
+                    if (el === " ") {
+                        counter--;
+                        return row.name;
+                    }
+                    return el;
+                });
+                if (counter !== 0) {
+                    startingRow = ["-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "E", "R", "R", "O", "R", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-"];
+                    blocks.push(startingRow);
+                    return;
+                }
             }
-        }
-        if (runningLength === parseInt(pikkus)) {
-            matches.push({start: start, length: runningLength});
-        }
-        return matches;
+            blocks.push(startingRow);
+        });
+        setVisualize(blocks);
     };
 
     return (
-        <MemoryContainer>
-            {visualize !== undefined ? visualize.map((row, id) => <RowContainer key={id}>
-                <h1>{id} {alpha[id]}</h1> {row.map((el, id) => <Block style={{background: colors[el]}}
-                                                                      key={id}>{el}</Block>)}</RowContainer>) : ""}
-        </MemoryContainer>
+        <div>
+            <div>
+                <p>Allesjäänud failidest on fragmenteerutunud {fragmentPercentage}%</p>
+                <p>Fragmenteerunud failidele kuulub {fragmentCoveragePercentage}% kasutatud ruumist</p>
+            </div>
+            <MemoryContainer>
+                {visualize !== undefined ? visualize.map((row, id) => <RowContainer key={id}>
+                    <h1>Samm {id}</h1> {row.map((el, id) => <Block style={{background: el === " " ? "white" : "orange"}}
+                                                                   key={id}>{el}</Block>)}</RowContainer>) : " "}
+            </MemoryContainer>
+        </div>
     )
 };
 

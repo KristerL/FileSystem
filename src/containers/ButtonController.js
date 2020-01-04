@@ -14,15 +14,11 @@ const ButtonContainer = styled.div`
         height:50px;
     }
 `;
-const ButtonController = ({algorithms, algorithmHandler, reset}) => {
+const ButtonController = ({reset}) => {
 
     return (
         <div>
-            <h4>Vali algoritm</h4>
             <ButtonContainer>
-                {algorithms.map(el =>
-                    <button onClick={() => algorithmHandler(el)} key={el}>{el}</button>
-                )}
                 <button onClick={() => reset()}>Puhasta väljund</button>
             </ButtonContainer>
         </div>

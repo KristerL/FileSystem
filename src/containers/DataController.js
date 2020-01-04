@@ -36,7 +36,7 @@ const DataController = ({processes, processHandler, selected}) => {
 
     return (
         <InputContainer>
-            <h4>Vali või sisesta järjend (kujul 1,10;3,3;4,1;8,6;15,2)</h4>
+            <h4>Vali või sisesta järjend (A,2;B,3;A,-;C,4;D,5;B,-;E,15)</h4>
             <InputBox>
                 {Object.keys(processes).map(item =>
                     <h3 key={item}><input readOnly checked={selected === processes[item]}
