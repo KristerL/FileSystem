@@ -55,11 +55,11 @@ const Display = ({process}) => {
 
     useEffect(() =>{
         if(visualize.length !== 0){
-            test();
+            fragments();
         }
     }, [visualize]);
 
-    const test = () => {
+    const fragments = () => {
         if(visualize[0]) {
             const lastResult = visualize[visualize.length -1];
             let fragmentKeys = [];
@@ -84,7 +84,7 @@ const Display = ({process}) => {
         }
     };
 
-    const builder = async (steps) => {
+    const builder = (steps) => {
         let blocks = [];
         let startingRow = [" ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " ", " "];
         blocks.push(startingRow);
@@ -115,7 +115,7 @@ const Display = ({process}) => {
     return (
         <div>
             <div>
-                <p>Allesjäänud failidest on fragmenteerutunud {fragmentPercentage}%</p>
+                <p>Allesjäänud failidest on fragmenteerunud {fragmentPercentage}%</p>
                 <p>Fragmenteerunud failidele kuulub {fragmentCoveragePercentage}% kasutatud ruumist</p>
             </div>
             <MemoryContainer>
